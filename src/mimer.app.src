@@ -1,4 +1,4 @@
-{application, getmime,
+{application, mimer,
  [
   {description, ""},
   {vsn, "1"},
@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { getmime_app, []}},
+  {mod, { mimer_app, []}},
   {env, []}
  ]}.

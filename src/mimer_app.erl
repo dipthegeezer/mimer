@@ -1,4 +1,4 @@
--module(getmime_app).
+-module(mimer_app).
 
 -behaviour(application).
 
@@ -10,7 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    getmime_sup:start_link().
+    mimer_sup:start_link().
 
 stop(_State) ->
     ok.

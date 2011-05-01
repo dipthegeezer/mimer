@@ -1,5 +1,5 @@
 
--module(getmime_sup).
+-module(mimer_sup).
 
 -behaviour(supervisor).
 
