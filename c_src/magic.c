@@ -1,5 +1,7 @@
 
 #include "erl_nif.h"
+#include <stdlib.h>
+#include "magic.h"
 
 static ErlNifResourceType* magic_RESOURCE;
 
@@ -14,21 +16,27 @@ ERL_NIF_TERM magic_myfunction(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
 static ErlNifFunc nif_funcs[] =
 {
     {"new", 0, magic_new},
-    {"myfunction", 1, magic_myfunction}
+    {"magic_file", 1, magic_file}
+    {"magic_buffer", 1, magic_buffer}
 };
 
 ERL_NIF_TERM magic_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     magic_handle* handle = enif_alloc_resource(env,
-                                                    magic_RESOURCE,
-                                                    sizeof(magic_handle));
+                                               magic_RESOURCE,
+                                               sizeof(magic_handle));
     ERL_NIF_TERM result = enif_make_resource(env, handle);
     enif_release_resource(env, handle);
     return enif_make_tuple2(env, enif_make_atom(env, "ok"), result);
 }
 
 
-ERL_NIF_TERM magic_myfunction(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+ERL_NIF_TERM magic_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+    return enif_make_atom(env, "ok");
+}
+
+ERL_NIF_TERM magic_buffer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     return enif_make_atom(env, "ok");
 }
