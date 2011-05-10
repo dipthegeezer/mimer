@@ -2,7 +2,7 @@
 
 -module(mimeheader_mod).
 
--export([mime_header_from_filename/1]).
+-export([]).
 
 -include("mimer.hrl").
 
@@ -71,19 +71,21 @@ type_from_file_extension(".csv") ->
 type_from_file_extension(_) ->
     undefined.
 
-%% @spec mime_header_from_filename(string()) -> header
-%% @doc  Guess the mime header of a file by the extension of its filename.
-mime_header_from_filename(File) ->
-    case type_from_file_extension(filename:extension(File)) of
-        undefined ->
-            #header{
-		        content_type = "text/plain"
-		    };
-        Mime ->
-            #header{
-                content_type = Mime
-		    }
-    end.
+
+parse_mime_glob(File) ->
+    Data =
+    case file:read_file(File) of
+        {ok, Data0} ->
+            Data0;
+        {error, enoent} ->
+            io:fwrite(standard_error,"Error File not Found ~p", [File]);
+        {error, eacces} ->
+            io:fwrite(standard_error,"Inadequate file permissions ~p", [File]);
+        {error, Reason} ->
+            io:fwrite(standard_error,"File error ~p ~p", [Reason, File])
+    end,
+    Lines = re:split(Data, "\r\n|\n|\r|\032", [{return, list}]),
+    Lines.
 
 %%
 %% Tests
@@ -93,11 +95,17 @@ mime_header_from_filename(File) ->
 
 type_from_file_extension_test() ->
     ?assertEqual("text/html",
-                 type_from_file_extension("monkey.html")),
+                 type_from_file_extension(".html")),
     ?assertEqual(undefined,
                  type_from_file_extension("")),
     ?assertEqual(undefined,
                  type_from_file_extension(".voodoo_people")),
+    ok.
+
+file_load_test() ->
+    Data = parse_mime_glob("/usr/share/mime/globs"),
+    io:fwrite(standard_error,"THE DATA ~p", [Data]),
+    ?assert(true),
     ok.
 
 -endif.
