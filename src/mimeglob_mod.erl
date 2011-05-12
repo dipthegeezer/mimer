@@ -1,17 +1,17 @@
 %% @doc Gives a good MIME type guess based on file extension.
 
--module(mimeheader_mod).
+-module(mimeglob_mod).
 
--export([]).
+-export([mimetype_from_file_extension]).
 
 -include("mimer.hrl").
 
-%% @spec type_from_file_extension(S::string()) -> string() | undefined
+%% @spec mimetype_from_file_extension(S::string()) -> string() | undefined
 %% @doc Given a filename extension (e.g. ".html") return a guess for the MIME
 %%      type such as "text/html". Will return the atom undefined if no good
 %%      guess is available.
 
-type_from_file_extension( MimeFileExtList, Filename ) ->
+mimetype_from_file_extension( MimeFileExtList, Filename ) ->
     case lists:keyfind(filename:extension(Filename), 1, MimeFileExtList) of
         false ->
             undefined;
@@ -19,6 +19,9 @@ type_from_file_extension( MimeFileExtList, Filename ) ->
             MimeType
     end.
 
+%% @spec parse_mime_glob(S::string()) -> {ok, list()} | error
+%% @doc Given a filename return the a list containing the
+%% mappings of the file extensions and their mime type
 parse_mime_glob(File) ->
     Data =
     case file:read_file(File) of
@@ -54,14 +57,14 @@ parse_mime_glob(File) ->
 -include_lib("eunit/include/eunit.hrl").
 -ifdef(TEST).
 
-type_from_file_extension_test() ->
+mimetype_from_file_extension_test() ->
     FileInfo = [{".html","text/html"}],
     ?assertEqual("text/html",
-                 type_from_file_extension(FileInfo, "monkey.html")),
+                 mimetype_from_file_extension(FileInfo, "monkey.html")),
     ?assertEqual(undefined,
-                 type_from_file_extension(FileInfo,"")),
+                 mimetype_from_file_extension(FileInfo,"")),
     ?assertEqual(undefined,
-                 type_from_file_extension(FileInfo,"magic_people.voodoo_people")),
+                 mimetype_from_file_extension(FileInfo,"magic_people.voodoo_people")),
     ok.
 
 file_load_test() ->
