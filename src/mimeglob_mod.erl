@@ -33,18 +33,19 @@ parse_mime_glob(File) ->
     end,
     Lines = re:split(Data, "\r\n|\n|\r|\032", [{return, list}]),
     ParsedValues =
-    lists:foldl(Fun(Line, FileInfo) ->
-                       case string:strip(Line) of
-                           "#" ++ _Comment ->
-                               FileInfo;
-                           Line2 ->
-                               case re:split(Line2, "\s?:\s?", [{return, list}]) of
-                                   [MimeType,Ext] ->
-                                       [{Ext,Mime}|FileInfo];
-                                   _ -> FileInfo
-                               end
-                       end
-               end,[{"",undefined}],Lines),
+    lists:foldr(
+      fun(Line, FileInfo) ->
+           case string:strip(Line) of
+               "#" ++ _Comment ->
+                   FileInfo;
+               Line2 ->
+                   case re:split(Line2, "\s?:\s?", [{return, list}]) of
+                       [MimeType,"*" ++ Ext] ->
+                           [{Ext,MimeType}|FileInfo];
+                       _ -> FileInfo
+                   end
+           end
+      end,[{"",undefined}],Lines),
     {ok,ParsedValues}.
 
 %%
