@@ -2,22 +2,9 @@
 
 -module(mimeglob_mod).
 
--export([mimetype_from_file_extension]).
+-export([parse_mime_glob/1]).
 
 -include("mimer.hrl").
-
-%% @spec mimetype_from_file_extension(S::string()) -> string() | undefined
-%% @doc Given a filename extension (e.g. ".html") return a guess for the MIME
-%%      type such as "text/html". Will return the atom undefined if no good
-%%      guess is available.
-
-mimetype_from_file_extension( MimeFileExtList, Filename ) ->
-    case lists:keyfind(filename:extension(Filename), 1, MimeFileExtList) of
-        false ->
-            undefined;
-        {_, MimeType} ->
-            MimeType
-    end.
 
 %% @spec parse_mime_glob(S::string()) -> {ok, list()} | error
 %% @doc Given a filename return the a list containing the
@@ -51,25 +38,18 @@ parse_mime_glob(File) ->
       end,[{"",undefined}],Lines),
     {ok,ParsedValues}.
 
+
+
 %%
 %% Tests
 %%
 -include_lib("eunit/include/eunit.hrl").
 -ifdef(TEST).
 
-mimetype_from_file_extension_test() ->
-    FileInfo = [{".html","text/html"}],
-    ?assertEqual("text/html",
-                 mimetype_from_file_extension(FileInfo, "monkey.html")),
-    ?assertEqual(undefined,
-                 mimetype_from_file_extension(FileInfo,"")),
-    ?assertEqual(undefined,
-                 mimetype_from_file_extension(FileInfo,"magic_people.voodoo_people")),
-    ok.
-
 file_load_test() ->
-    {ok,Data} = parse_mime_glob("/usr/share/mime/globs"),
-    io:fwrite(standard_error,"THE DATA ~p", [Data]),
+    PrivDir = code:priv_dir(mimer_app),
+    io:fwrite(standard_error,"File error ~p ", [PrivDir]),
+    {ok,_} = parse_mime_glob("/usr/share/mime/globs"),
     ?assert(true),
     ok.
 
