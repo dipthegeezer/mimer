@@ -24,5 +24,11 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
+    FileName = case os:getenv("MIMER_GLOB_FILE") of
+                   false -> "/usr/share/mime/globs";
+                   Any -> Any
+               end,
+    Processes = [{ mimer_server, {mimer_server, start_link, [FileName]},
+           permanent, 5000, worker, dynamic}],
+    {ok, { {one_for_one, 5, 10}, Processes} }.
 

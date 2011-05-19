@@ -10,33 +10,34 @@
 %% @doc Given a filename return the a list containing the
 %% mappings of the file extensions and their mime type
 parse_mime_glob(File) ->
-    Data =
     case file:read_file(File) of
-        {ok, Data0} ->
-            Data0;
+        {ok, Data} ->
+            Lines = re:split(Data, "\r\n|\n|\r|\032", [{return, list}]),
+            ParsedValues =
+                lists:foldr(
+                  fun(Line, FileInfo) ->
+                      case string:strip(Line) of
+                          "#" ++ _Comment ->
+                              FileInfo;
+                          Line2 ->
+                              case re:split(Line2, "\s?:\s?", [{return, list}]) of
+                                  [MimeType,"*" ++ Ext] ->
+                                      [{Ext,MimeType}|FileInfo];
+                                  _ -> FileInfo
+                              end
+                      end
+                  end,[{"",undefined}],Lines),
+            {ok, ParsedValues };
         {error, enoent} ->
-            io:fwrite(standard_error,"Error File not Found ~p", [File]);
+            io:fwrite("Error File not Found ~p", [File]),
+            {error, enoent};
         {error, eacces} ->
-            io:fwrite(standard_error,"Inadequate file permissions ~p", [File]);
+            io:fwrite("Inadequate file permissions ~p", [File]),
+            {error, eacces};
         {error, Reason} ->
-            io:fwrite(standard_error,"File error ~p ~p", [Reason, File])
-    end,
-    Lines = re:split(Data, "\r\n|\n|\r|\032", [{return, list}]),
-    ParsedValues =
-    lists:foldr(
-      fun(Line, FileInfo) ->
-           case string:strip(Line) of
-               "#" ++ _Comment ->
-                   FileInfo;
-               Line2 ->
-                   case re:split(Line2, "\s?:\s?", [{return, list}]) of
-                       [MimeType,"*" ++ Ext] ->
-                           [{Ext,MimeType}|FileInfo];
-                       _ -> FileInfo
-                   end
-           end
-      end,[{"",undefined}],Lines),
-    {ok,ParsedValues}.
+            io:fwrite("File error ~p ~p", [Reason, File]),
+            {error, Reason}
+    end.
 
 
 
@@ -47,11 +48,9 @@ parse_mime_glob(File) ->
 -ifdef(TEST).
 
 file_load_test() ->
-    PrivDir = code:priv_dir(mimer_app),
-    io:fwrite(standard_error,"File error ~p ", [PrivDir]),
-    {ok,_} = parse_mime_glob("/usr/share/mime/globs"),
-    ?assert(true),
-    ok.
+    {ok,Monkey} = parse_mime_glob("/usr/share/mime/globs"),
+    {".cpp",Type} = lists:keyfind(".cpp", 1, Monkey),
+    ?assertEqual("text/x-c++src", Type).
 
 -endif.
 

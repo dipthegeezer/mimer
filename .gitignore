@@ -1,3 +1,6 @@
 .~/
 ebin/
 .eunit/
+rel/
+test/
+logs/

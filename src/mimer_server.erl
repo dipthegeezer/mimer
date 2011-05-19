@@ -6,7 +6,7 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/0]).
+-export([start_link/1]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -27,8 +27,8 @@
 %% API Function Definitions
 %% ------------------------------------------------------------------
 
-start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(FileName) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [FileName], []).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
@@ -42,8 +42,13 @@ init([FileName]) ->
             {stop, Error}
     end.
 
-handle_call(_Request, _From, State) ->
-  {noreply, ok, State}.
+handle_call({get_mime_type, FileName}, _From, State) ->
+    case mimetype_from_file_extension(State,FileName) of
+        undefined ->
+            {reply, {error, undefined}, State};
+        MimeType ->
+            {reply, {ok, MimeType}, State}
+    end.
 
 handle_cast(_Msg, State) ->
   {noreply, State}.
@@ -66,14 +71,13 @@ code_change(_OldVsn, State, _Extra) ->
 %%      type such as "text/html". Will return the atom undefined if no good
 %%      guess is available.
 
-mimetype_from_file_extension( MimeFileExtList, Filename ) ->
-    case lists:keyfind(filename:extension(Filename), 1, MimeFileExtList) of
+mimetype_from_file_extension( #mserver{mime_glob=MimeGlob}, Filename ) ->
+    case lists:keyfind(filename:extension(Filename), 1, MimeGlob) of
         false ->
             undefined;
         {_, MimeType} ->
             MimeType
     end.
-
 
 %%
 %% Tests
@@ -82,7 +86,7 @@ mimetype_from_file_extension( MimeFileExtList, Filename ) ->
 -ifdef(TEST).
 
 mimetype_from_file_extension_test() ->
-    FileInfo = [{".html","text/html"}],
+    FileInfo = #mserver{mime_glob = [{".html","text/html"}]},
     ?assertEqual("text/html",
                  mimetype_from_file_extension(FileInfo, "monkey.html")),
     ?assertEqual(undefined,
